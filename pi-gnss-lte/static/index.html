@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1419" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <title>Pi GNSS/LTE Lab</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Pi Nav Lab</h1>
+      <p id="status-line" class="muted">Connecting…</p>
+    </div>
+    <button id="live-toggle" class="primary">Live</button>
+  </header>
+
+  <section class="nav-panel card">
+    <form id="search-form" class="search-row">
+      <input id="search-input" type="search" placeholder="Where to? (address or place)" autocomplete="off" />
+      <select id="profile">
+        <option value="driving">Drive</option>
+        <option value="foot">Walk</option>
+        <option value="bike">Bike</option>
+      </select>
+      <button type="submit">Route</button>
+    </form>
+    <ul id="search-results" class="results hidden"></ul>
+    <div id="nav-banner" class="nav-banner hidden">
+      <div>
+        <strong id="nav-instruction">—</strong>
+        <p id="nav-meta" class="muted">—</p>
+      </div>
+      <button id="stop-nav" type="button" class="ghost">Stop</button>
+    </div>
+  </section>
+
+  <section class="layer-toggles card">
+    <span class="layer-label">Layers</span>
+    <button type="button" class="layer-btn on" data-layer="tiles">Map tiles</button>
+    <button type="button" class="layer-btn on" data-layer="route">Route</button>
+    <button type="button" class="layer-btn on" data-layer="track">Track</button>
+    <button type="button" class="layer-btn on" data-layer="pointer">Pointer</button>
+    <button type="button" class="layer-btn on" data-layer="destination">Dest.</button>
+  </section>
+
+  <div id="map"></div>
+
+  <section class="metrics">
+    <div class="card">
+      <span class="label">Latitude</span>
+      <strong id="lat">—</strong>
+    </div>
+    <div class="card">
+      <span class="label">Longitude</span>
+      <strong id="lon">—</strong>
+    </div>
+    <div class="card">
+      <span class="label">Speed</span>
+      <strong id="speed">—</strong>
+    </div>
+    <div class="card">
+      <span class="label">To destination</span>
+      <strong id="dest-dist">—</strong>
+    </div>
+    <div class="card">
+      <span class="label">Satellites</span>
+      <strong id="sats">—</strong>
+    </div>
+    <div class="card">
+      <span class="label">LTE RSRP</span>
+      <strong id="rsrp">—</strong>
+    </div>
+  </section>
+
+  <section class="raw card">
+    <details open>
+      <summary>Raw GNSS / LTE data</summary>
+      <p class="muted raw-hint">Live feed from Pi gpsd + modem — updates every poll.</p>
+      <h3 class="raw-heading">Navigation (parsed)</h3>
+      <pre id="raw-nav" class="raw-block">—</pre>
+      <h3 class="raw-heading">LTE (parsed)</h3>
+      <pre id="raw-lte" class="raw-block">—</pre>
+      <h3 class="raw-heading">gpsd (raw JSON)</h3>
+      <pre id="raw-gpsd" class="raw-block">—</pre>
+    </details>
+  </section>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
