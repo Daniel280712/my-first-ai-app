@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pi VPN Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div id="login-screen" class="screen hidden">
+    <div class="card login-card">
+      <h1>Pi VPN</h1>
+      <p class="muted">Your personal WireGuard dashboard</p>
+      <form id="login-form">
+        <label for="password">Dashboard password</label>
+        <input id="password" type="password" autocomplete="current-password" required />
+        <button type="submit">Sign in</button>
+      </form>
+      <p id="login-error" class="error hidden"></p>
+    </div>
+  </div>
+
+  <div id="app-screen" class="screen hidden">
+    <header>
+      <div>
+        <h1>Pi VPN Dashboard</h1>
+        <p class="muted">WireGuard on Raspberry Pi 3</p>
+      </div>
+      <button id="logout-btn" class="ghost">Log out</button>
+    </header>
+
+    <section class="grid stats">
+      <div class="card stat">
+        <span class="label">Server</span>
+        <strong id="stat-running">—</strong>
+      </div>
+      <div class="card stat">
+        <span class="label">Listen port</span>
+        <strong id="stat-port">—</strong>
+      </div>
+      <div class="card stat">
+        <span class="label">Connected peers</span>
+        <strong id="stat-connected">—</strong>
+      </div>
+      <div class="card stat">
+        <span class="label">Endpoint</span>
+        <strong id="stat-endpoint" class="small">—</strong>
+      </div>
+    </section>
+
+    <section class="grid two-col">
+      <div class="card">
+        <div class="card-head">
+          <h2>Active peers</h2>
+          <button id="refresh-btn" class="ghost">Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>IP</th>
+                <th>Status</th>
+                <th>Last seen</th>
+                <th>Traffic</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="peers-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h2>Add device</h2>
+          <form id="add-client-form" class="stack compact">
+            <label for="client-name">Device name</label>
+            <input id="client-name" placeholder="pixel5" required />
+            <label for="client-dns">DNS</label>
+            <input id="client-dns" value="1.1.1.1" />
+            <button type="submit">Create client + QR</button>
+          </form>
+          <p id="add-error" class="error hidden"></p>
+        </div>
+
+        <div class="card">
+          <h2>Settings</h2>
+          <form id="settings-form" class="stack compact">
+            <label for="endpoint">Public endpoint (IP or DDNS:port)</label>
+            <input id="endpoint" placeholder="home.duckdns.org:51820" required />
+            <label for="new-password">New dashboard password (optional)</label>
+            <input id="new-password" type="password" autocomplete="new-password" />
+            <button type="submit">Save settings</button>
+          </form>
+          <p id="settings-msg" class="ok hidden"></p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <dialog id="qr-dialog">
+    <div class="dialog-body">
+      <h2 id="qr-title">Scan with WireGuard</h2>
+      <img id="qr-image" alt="WireGuard QR code" />
+      <pre id="qr-config"></pre>
+      <button id="close-qr" type="button">Close</button>
+    </div>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
