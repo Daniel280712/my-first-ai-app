@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1419" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <title>Pi GNSS/LTE Lab</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Pi GNSS / LTE Lab</h1>
+      <p id="status-line" class="muted">Connecting…</p>
+    </div>
+    <button id="live-toggle" class="primary">Live</button>
+  </header>
+
+  <div id="map"></div>
+
+  <section class="metrics">
+    <div class="card">
+      <span class="label">Latitude</span>
+      <strong id="lat">—</strong>
+    </div>
+    <div class="card">
+      <span class="label">Longitude</span>
+      <strong id="lon">—</strong>
+    </div>
+    <div class="card">
+      <span class="label">Speed</span>
+      <strong id="speed">—</strong>
+    </div>
+    <div class="card">
+      <span class="label">Satellites</span>
+      <strong id="sats">—</strong>
+    </div>
+    <div class="card">
+      <span class="label">HDOP</span>
+      <strong id="hdop">—</strong>
+    </div>
+    <div class="card">
+      <span class="label">LTE RSRP</span>
+      <strong id="rsrp">—</strong>
+    </div>
+  </section>
+
+  <section class="learn card">
+    <h2>What you're seeing</h2>
+    <ul>
+      <li><strong>GNSS</strong> — satellites → position fix on the map (USB GPS on the Pi).</li>
+      <li><strong>LTE</strong> — cell signal metrics when a USB modem + SIM is plugged in.</li>
+      <li><strong>Live</strong> — phone polls the Pi; add this page to your home screen for an app-like tracker.</li>
+    </ul>
+  </section>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
