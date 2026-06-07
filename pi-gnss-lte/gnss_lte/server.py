@@ -6,11 +6,14 @@ import json
 import time
 from pathlib import Path
 
-from fastapi import FastAPI, Query
+from typing import Literal
+
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
-from gnss_lte import gps, lte, storage
+from gnss_lte import gps, lte, routing, storage
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
@@ -87,3 +90,33 @@ def track(limit: int = Query(default=300, le=2000)) -> dict:
 @app.get("/api/demo")
 def demo() -> dict:
     return {"mode": "demo", "points": _load_demo_track()}
+
+
+@app.get("/api/geocode")
+def geocode(q: str = Query(min_length=2)) -> dict:
+    try:
+        return {"results": routing.geocode(q)}
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+class RouteRequest(BaseModel):
+    from_lat: float
+    from_lon: float
+    to_lat: float
+    to_lon: float
+    profile: Literal["driving", "foot", "bike"] = "driving"
+
+
+@app.post("/api/route")
+def build_route(body: RouteRequest) -> dict:
+    try:
+        return routing.route(
+            body.from_lat,
+            body.from_lon,
+            body.to_lat,
+            body.to_lon,
+            profile=body.profile,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

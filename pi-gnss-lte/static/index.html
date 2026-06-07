@@ -13,11 +13,31 @@
 <body>
   <header>
     <div>
-      <h1>Pi GNSS / LTE Lab</h1>
+      <h1>Pi Nav Lab</h1>
       <p id="status-line" class="muted">Connecting…</p>
     </div>
     <button id="live-toggle" class="primary">Live</button>
   </header>
+
+  <section class="nav-panel card">
+    <form id="search-form" class="search-row">
+      <input id="search-input" type="search" placeholder="Where to? (address or place)" autocomplete="off" />
+      <select id="profile">
+        <option value="driving">Drive</option>
+        <option value="foot">Walk</option>
+        <option value="bike">Bike</option>
+      </select>
+      <button type="submit">Route</button>
+    </form>
+    <ul id="search-results" class="results hidden"></ul>
+    <div id="nav-banner" class="nav-banner hidden">
+      <div>
+        <strong id="nav-instruction">—</strong>
+        <p id="nav-meta" class="muted">—</p>
+      </div>
+      <button id="stop-nav" type="button" class="ghost">Stop</button>
+    </div>
+  </section>
 
   <div id="map"></div>
 
@@ -35,12 +55,12 @@
       <strong id="speed">—</strong>
     </div>
     <div class="card">
-      <span class="label">Satellites</span>
-      <strong id="sats">—</strong>
+      <span class="label">To destination</span>
+      <strong id="dest-dist">—</strong>
     </div>
     <div class="card">
-      <span class="label">HDOP</span>
-      <strong id="hdop">—</strong>
+      <span class="label">Satellites</span>
+      <strong id="sats">—</strong>
     </div>
     <div class="card">
       <span class="label">LTE RSRP</span>
@@ -49,11 +69,11 @@
   </section>
 
   <section class="learn card">
-    <h2>What you're seeing</h2>
+    <h2>Real-time navigation</h2>
     <ul>
-      <li><strong>GNSS</strong> — satellites → position fix on the map (USB GPS on the Pi).</li>
-      <li><strong>LTE</strong> — cell signal metrics when a USB modem + SIM is plugged in.</li>
-      <li><strong>Live</strong> — phone polls the Pi; add this page to your home screen for an app-like tracker.</li>
+      <li><strong>Maps</strong> — OpenStreetMap tiles (needs internet).</li>
+      <li><strong>Routing</strong> — online turn-by-turn via OSRM, geocoded with Nominatim.</li>
+      <li><strong>GPS</strong> — live position from USB GPS on the Pi; map follows you while navigating.</li>
     </ul>
   </section>
 

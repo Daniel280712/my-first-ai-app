@@ -23,6 +23,72 @@ header {
   border-bottom: 1px solid var(--border);
 }
 
+.nav-panel {
+  margin: 0.65rem 0.75rem 0;
+  padding: 0.75rem;
+}
+
+.search-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.45rem;
+}
+
+.search-row button {
+  border: none;
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  background: #3b82f6;
+  color: white;
+  font-weight: 700;
+}
+
+.search-row select {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #0d121a;
+  color: var(--text);
+  padding: 0 0.35rem;
+}
+
+.results {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.results li {
+  padding: 0.55rem 0.45rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.results li:hover { background: #0d121a; }
+
+.nav-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
+}
+
+.nav-banner strong { display: block; font-size: 0.95rem; }
+.nav-banner p { margin: 0.2rem 0 0; font-size: 0.8rem; }
+
+button.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.45rem 0.7rem;
+}
+
 h1 { margin: 0; font-size: 1.1rem; }
 .muted { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.85rem; }
 
@@ -42,9 +108,10 @@ button.primary.off {
 }
 
 #map {
-  height: 48vh;
-  min-height: 240px;
+  height: 42vh;
+  min-height: 220px;
   width: 100%;
+  margin-top: 0.5rem;
 }
 
 .metrics {

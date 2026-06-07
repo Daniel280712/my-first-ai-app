@@ -8,8 +8,15 @@ Learn **GPS navigation** and **LTE cell signal** on a **Raspberry Pi 3**, then *
 |---|---|
 | **USB GPS on Pi** | Real satellite fixes via `gpsd` |
 | **USB LTE modem** (optional) | Signal strength (RSRP/RSRQ) via `mmcli` |
-| **Web app on Pi** | Live map + metrics |
-| **Your phone** | Open in browser → **Add to Home screen** = app-like tracker |
+| **Web app on Pi** | Live map, **online routing**, turn-by-turn |
+| **Your phone** | Open in browser → **Add to Home screen** = nav app |
+
+### Real-time navigation
+
+- **Maps** — OpenStreetMap (internet required)
+- **Search** — address/place lookup (Nominatim)
+- **Routing** — driving / walking / cycling (OSRM)
+- **Live** — Pi GPS updates your position; map follows you; reroutes if you go off course
 
 ```
 Satellites → USB GPS → Pi (gpsd) → map API → phone browser/PWA
@@ -72,12 +79,22 @@ sudo apt install modemmanager
 mmcli -L
 ```
 
+## Requirements for routing
+
+- **Pi must have internet** (Ethernet/Wi‑Fi) for map tiles + routing APIs
+- **Phone on same network** as Pi (or VPN into home later)
+- **GPS fix** outdoors / near window for live position
+
+Routing uses free OSRM + Nominatim services — fine for personal lab use; don't hammer them with massive traffic.
+
 ## API
 
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/live` | Current GPS + LTE snapshot |
 | `GET /api/track` | Logged track points |
+| `GET /api/geocode?q=` | Search for a destination |
+| `POST /api/route` | Turn-by-turn route between two points |
 | `GET /api/demo` | Sample track |
 
 ## Next steps
