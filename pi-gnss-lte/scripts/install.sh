@@ -35,6 +35,15 @@ python3 -m venv "${VENV_DIR}"
 "${VENV_DIR}/bin/pip" install --upgrade pip
 "${VENV_DIR}/bin/pip" install -r "${REPO_DIR}/requirements.txt"
 
+ENV_FILE="/etc/gnss-lte-lab.env"
+if [[ ! -f "${ENV_FILE}" ]]; then
+  cat > "${ENV_FILE}" <<'EOF'
+# Optional: Google Maps JavaScript API key (Maps JavaScript API enabled in Google Cloud)
+GOOGLE_MAPS_API_KEY=""
+EOF
+  chmod 600 "${ENV_FILE}"
+fi
+
 UNIT="/etc/systemd/system/${SERVICE_NAME}.service"
 cat > "${UNIT}" <<EOF
 [Unit]
@@ -45,6 +54,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=${REPO_DIR}
+EnvironmentFile=${ENV_FILE}
 Environment=PYTHONPATH=${REPO_DIR}
 ExecStart=${VENV_DIR}/bin/uvicorn gnss_lte.server:app --host 0.0.0.0 --port ${PORT}
 Restart=on-failure
@@ -65,3 +75,5 @@ echo
 echo "Hardware:"
 echo "  GPS: USB dongle (set GPS_DEVICE=${GPS_DEVICE} if not ttyUSB0)"
 echo "  LTE: optional USB modem + SIM (install modemmanager for mmcli)"
+echo
+echo "Google Maps (optional): edit ${ENV_FILE} and set GOOGLE_MAPS_API_KEY"

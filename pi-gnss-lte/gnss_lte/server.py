@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from gnss_lte import gps, lte, routing, storage
+from gnss_lte import config, gps, lte, routing, storage
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
@@ -90,6 +90,11 @@ def track(limit: int = Query(default=300, le=2000)) -> dict:
 @app.get("/api/demo")
 def demo() -> dict:
     return {"mode": "demo", "points": _load_demo_track()}
+
+
+@app.get("/api/config")
+def app_config() -> dict:
+    return config.public_config()
 
 
 @app.get("/api/geocode")

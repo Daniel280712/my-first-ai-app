@@ -13,10 +13,20 @@ Learn **GPS navigation** and **LTE cell signal** on a **Raspberry Pi 3**, then *
 
 ### Real-time navigation
 
-- **Maps** — OpenStreetMap (internet required)
+- **Maps** — **Google Maps** tiles (with your API key) or OpenStreetMap fallback
+- **Your pointer** — custom icon on top of the map, driven by Pi GPS (rotates with heading)
 - **Search** — address/place lookup (Nominatim)
 - **Routing** — driving / walking / cycling (OSRM)
-- **Live** — Pi GPS updates your position; map follows you; reroutes if you go off course
+- **Live** — Pi GPS updates your pointer; map follows you; reroutes if you go off course
+
+### Google Maps API key (optional)
+
+1. Create a key in [Google Cloud Console](https://console.cloud.google.com/) with **Maps JavaScript API** enabled
+2. On the Pi: `sudo nano /etc/gnss-lte-lab.env`
+3. Set `GOOGLE_MAPS_API_KEY="your-key-here"`
+4. `sudo systemctl restart pi-gnss-lte-lab`
+
+Without a key, the app uses OpenStreetMap tiles — routing still works.
 
 ```
 Satellites → USB GPS → Pi (gpsd) → map API → phone browser/PWA

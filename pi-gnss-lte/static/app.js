@@ -1,18 +1,8 @@
-const map = L.map("map", { zoomControl: true }).setView([51.5074, -0.1278], 14);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "&copy; OpenStreetMap",
-  maxZoom: 19,
-}).addTo(map);
-
-const trackLine = L.polyline([], { color: "#22c55e", weight: 4 }).addTo(map);
-const routeLine = L.polyline([], { color: "#3b82f6", weight: 6, opacity: 0.85 }).addTo(map);
-const destMarker = L.marker([51.5074, -0.1278], { opacity: 0 }).addTo(map);
-const marker = L.circleMarker([51.5074, -0.1278], {
-  radius: 9,
-  color: "#22c55e",
-  fillColor: "#22c55e",
-  fillOpacity: 0.95,
-}).addTo(map);
+let map;
+let marker = null;
+let trackLine;
+let routeLine;
+let destMarker;
 
 let liveMode = true;
 let pollTimer = null;
@@ -21,11 +11,77 @@ let destination = null;
 let activeRoute = null;
 let lastLiveFix = null;
 let lastRerouteAt = 0;
+let appConfig = { map_provider: "osm" };
 
 const statusLine = document.getElementById("status-line");
 const liveBtn = document.getElementById("live-toggle");
 const navBanner = document.getElementById("nav-banner");
 const searchResults = document.getElementById("search-results");
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+function makePointerIcon(heading = 0) {
+  return L.divIcon({
+    className: "vehicle-pointer-wrap",
+    html: `<img class="vehicle-pointer" src="/static/pointer.svg" style="transform: rotate(${heading}deg)" alt="you" />`,
+    iconSize: [48, 48],
+    iconAnchor: [24, 24],
+  });
+}
+
+function setPointer(lat, lon, trackDeg = 0) {
+  const heading = trackDeg ?? 0;
+  if (!marker) {
+    marker = L.marker([lat, lon], { icon: makePointerIcon(heading), zIndexOffset: 1000 }).addTo(map);
+    return;
+  }
+  marker.setLatLng([lat, lon]);
+  marker.setIcon(makePointerIcon(heading));
+}
+
+async function initMap() {
+  appConfig = await fetchJson("/api/config");
+  map = L.map("map", { zoomControl: true }).setView([51.5074, -0.1278], 14);
+
+  if (appConfig.map_provider === "google" && appConfig.google_maps_api_key) {
+    try {
+      await loadScript(
+        `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(appConfig.google_maps_api_key)}`
+      );
+      await loadScript(
+        "https://unpkg.com/leaflet.gridlayer.googlemutant@0.14.0/dist/Leaflet.GoogleMutant.js"
+      );
+      L.gridLayer.googleMutant({ type: "roadmap", maxZoom: 21 }).addTo(map);
+      statusLine.textContent = "Google Maps · custom GPS pointer";
+    } catch (err) {
+      console.warn(err);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap",
+        maxZoom: 19,
+      }).addTo(map);
+      statusLine.textContent = "Google Maps failed — using OpenStreetMap";
+    }
+  } else {
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap",
+      maxZoom: 19,
+    }).addTo(map);
+    statusLine.textContent = "OpenStreetMap · add GOOGLE_MAPS_API_KEY for Google tiles";
+  }
+
+  trackLine = L.polyline([], { color: "#94a3b8", weight: 3, opacity: 0.7 }).addTo(map);
+  routeLine = L.polyline([], { color: "#3b82f6", weight: 6, opacity: 0.85 }).addTo(map);
+  destMarker = L.marker([51.5074, -0.1278], { opacity: 0, zIndexOffset: 500 }).addTo(map);
+  setPointer(51.5074, -0.1278, 0);
+}
 
 function fmtSpeed(mps) {
   if (mps == null) return "—";
@@ -81,8 +137,7 @@ function updateNavUi(fix) {
 
   let step = activeRoute.steps[0];
   for (const s of activeRoute.steps) {
-    const d = haversineM(fix.lat, fix.lon, s.lat, s.lon);
-    if (d > 35) {
+    if (haversineM(fix.lat, fix.lon, s.lat, s.lon) > 35) {
       step = s;
       break;
     }
@@ -104,10 +159,9 @@ function updateNavUi(fix) {
 
 function drawTrack(points, follow = false) {
   if (!points.length) return;
-  const latlngs = points.map((p) => [p.lat, p.lon]);
-  trackLine.setLatLngs(latlngs);
+  trackLine.setLatLngs(points.map((p) => [p.lat, p.lon]));
   const last = points[points.length - 1];
-  marker.setLatLng([last.lat, last.lon]);
+  setPointer(last.lat, last.lon, last.track_deg ?? lastLiveFix?.track_deg ?? 0);
   if (follow || navigating) {
     map.setView([last.lat, last.lon], Math.max(map.getZoom(), 16), { animate: true });
   } else if (points.length > 1 && !navigating) {
@@ -151,7 +205,7 @@ async function requestRoute(fromLat, fromLon, toLat, toLon, profile, showBanner 
     document.getElementById("nav-instruction").textContent = route.steps[0]?.instruction ?? "Follow the blue route";
     document.getElementById("nav-meta").textContent =
       `${fmtDist(route.distance_m)} · about ${fmtDuration(route.duration_s)}`;
-    statusLine.textContent = "Navigation active — follow the blue route";
+    statusLine.textContent = "Navigation active — your pointer follows Pi GPS";
   }
 }
 
@@ -163,16 +217,17 @@ async function pollLive() {
 
     if (data.mode === "live" && data.gps?.lat != null) {
       lastLiveFix = data.gps;
+      setPointer(data.gps.lat, data.gps.lon, data.gps.track_deg ?? 0);
       if (navigating) {
-        statusLine.textContent = "Navigation active — live GPS";
+        statusLine.textContent = "Navigation active — live GPS pointer";
         setMetrics(data.gps, data.sky, data.lte);
-        marker.setLatLng([data.gps.lat, data.gps.lon]);
         map.setView([data.gps.lat, data.gps.lon], Math.max(map.getZoom(), 16), { animate: true });
         updateNavUi(data.gps);
       } else {
         statusLine.textContent = `Live fix · ${points.length} logged points`;
         setMetrics(data.gps, data.sky, data.lte);
-        drawTrack(points.length ? points : [{ lat: data.gps.lat, lon: data.gps.lon, speed_mps: data.gps.speed_mps }]);
+        if (points.length) drawTrack(points);
+        else map.setView([data.gps.lat, data.gps.lon], Math.max(map.getZoom(), 16), { animate: true });
       }
     } else if (points.length) {
       statusLine.textContent = navigating ? "Waiting for GPS fix…" : `Waiting for GPS · ${track.mode} track`;
@@ -217,7 +272,6 @@ async function pickDestination(place) {
   searchResults.classList.add("hidden");
   destination = place;
   document.getElementById("search-input").value = place.label;
-
   const profile = document.getElementById("profile").value;
   if (!lastLiveFix) {
     statusLine.textContent = "Waiting for GPS fix to route from your position…";
@@ -258,9 +312,13 @@ liveBtn.addEventListener("click", async () => {
   else {
     clearInterval(pollTimer);
     const track = await fetchJson("/api/demo");
-    statusLine.textContent = "Demo mode — routing still works if you search a destination";
+    statusLine.textContent = "Demo mode — custom pointer on sample track";
     drawTrack(track.points ?? []);
   }
 });
 
-startPolling();
+initMap()
+  .then(startPolling)
+  .catch((err) => {
+    statusLine.textContent = `Map init failed — ${err.message}`;
+  });
