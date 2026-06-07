@@ -26,9 +26,28 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _no_fix() -> GpsFix:
+    return GpsFix(
+        lat=None,
+        lon=None,
+        altitude_m=None,
+        speed_mps=None,
+        track_deg=None,
+        satellites=None,
+        hdop=None,
+        mode=0,
+        source="gpsd",
+        timestamp=_now(),
+    )
+
+
 def read_gpsd(host: str = "127.0.0.1", port: int = 2947, timeout: float = 2.0) -> GpsFix:
     """Return the latest TPV fix from a local gpsd instance."""
-    with socket.create_connection((host, port), timeout=timeout) as sock:
+    try:
+        sock = socket.create_connection((host, port), timeout=timeout)
+    except OSError:
+        return _no_fix()
+    with sock:
         sock.sendall(b'?WATCH={"enable":true,"json":true}\n')
         sock.settimeout(timeout)
         for _ in range(40):
@@ -53,23 +72,16 @@ def read_gpsd(host: str = "127.0.0.1", port: int = 2947, timeout: float = 2.0) -
                     source="gpsd",
                     timestamp=_now(),
                 )
-    return GpsFix(
-        lat=None,
-        lon=None,
-        altitude_m=None,
-        speed_mps=None,
-        track_deg=None,
-        satellites=None,
-        hdop=None,
-        mode=0,
-        source="gpsd",
-        timestamp=_now(),
-    )
+    return _no_fix()
 
 
 def read_gpsd_status(host: str = "127.0.0.1", port: int = 2947, timeout: float = 2.0) -> dict:
     """Sky view / satellite info when available."""
-    with socket.create_connection((host, port), timeout=timeout) as sock:
+    try:
+        sock = socket.create_connection((host, port), timeout=timeout)
+    except OSError:
+        return {"satellites_visible": None, "satellites_used": None, "hdop": None, "source": "gpsd", "timestamp": _now()}
+    with sock:
         sock.sendall(b'?WATCH={"enable":true,"json":true}\n')
         sock.settimeout(timeout)
         for _ in range(60):
