@@ -30,13 +30,21 @@ Optional: [DuckDNS](https://www.duckdns.org/) free hostname if your home IP chan
 git clone https://github.com/Daniel280712/my-first-ai-app.git
 cd my-first-ai-app/pi-vpn
 
-# 1. Install server
+# 1. Install WireGuard server
 sudo ./scripts/install-wireguard.sh
 
-# 2. Add your Pixel 5 as a client (set your public IP or DDNS)
-sudo ENDPOINT=yourname.duckdns.org:51820 ./scripts/add-client.sh pixel5
+# 2. Install your own web dashboard
+sudo ./scripts/install-dashboard.sh
 
-# 3. Scan the QR code with the WireGuard app on your phone
+# 3. Open http://<pi-lan-ip>:8080 — log in, set endpoint, add Pixel 5, scan QR
+```
+
+The dashboard lets you manage clients, view who's connected, and generate QR codes — no CLI needed after setup.
+
+### CLI (optional)
+
+```bash
+sudo ENDPOINT=yourname.duckdns.org:51820 ./scripts/add-client.sh pixel5
 ```
 
 ## Router setup
@@ -48,16 +56,38 @@ sudo ENDPOINT=yourname.duckdns.org:51820 ./scripts/add-client.sh pixel5
 ## Phone setup (Pixel 5)
 
 1. Install **WireGuard** from Google Play.
-2. Tap **+** → **Scan from QR code** (shown when you run `add-client.sh`).
+2. In the dashboard, add a device named `pixel5` and **scan the QR code**.
 3. Toggle the tunnel on when you're away from home.
+
+## Dashboard
+
+Your own web UI at **`http://<pi-ip>:8080`**:
+
+| Feature | What it does |
+|---|---|
+| **Server status** | Online/offline, listen port, endpoint |
+| **Active peers** | Who's connected, last handshake, traffic |
+| **Add device** | Creates client config + QR code |
+| **Settings** | Set public endpoint (DuckDNS) and dashboard password |
+
+Install with:
+
+```bash
+sudo ./scripts/install-dashboard.sh
+```
+
+The install script prints a one-time dashboard password. Change it in Settings.
+
+**Security:** use the dashboard on your **home network only** (don't port-forward 8080 to the internet).
 
 ## Scripts
 
 | Script | Purpose |
 |---|---|
 | `scripts/install-wireguard.sh` | Install WireGuard, enable routing/NAT on Pi |
-| `scripts/add-client.sh` | Create client config + QR for a device |
-| `scripts/status.sh` | Check interface, forwarding, clients |
+| `scripts/install-dashboard.sh` | Install web dashboard + systemd service |
+| `scripts/add-client.sh` | CLI: create client config + QR |
+| `scripts/status.sh` | CLI: quick health check |
 
 ## How it works (learning)
 
@@ -87,6 +117,7 @@ Phone (10.8.0.2)  --encrypted UDP-->  Pi (10.8.0.1)  --NAT-->  Internet / home L
 
 ## Pipeline / what's next
 
+- [x] Web dashboard (client management, QR codes, peer status)
 - [ ] DuckDNS auto-update script on the Pi
 - [ ] Split tunnel option (home LAN only vs full VPN)
 - [ ] Optional: combine with Nav/LTE lab on the same Pi later

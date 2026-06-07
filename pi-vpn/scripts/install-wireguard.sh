@@ -61,6 +61,6 @@ echo "Server public key: ${SERVER_PUB}"
 echo
 echo "Next steps:"
 echo "  1. Forward UDP ${WG_PORT} on your router to this Pi."
-echo "  2. Set ENDPOINT in add-client.sh (public IP or DuckDNS hostname)."
-echo "  3. Add a phone/laptop client: sudo ./scripts/add-client.sh pixel5"
+echo "  2. Install the web dashboard: sudo ./scripts/install-dashboard.sh"
+echo "  3. Open http://<pi-ip>:8080 — add clients and scan QR codes from your phone."
 echo

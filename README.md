@@ -11,7 +11,8 @@ Run your own VPN at home. Connect your phone (Pixel 5) or laptop when you're out
 ```bash
 cd pi-vpn
 sudo ./scripts/install-wireguard.sh
-sudo ENDPOINT=yourname.duckdns.org:51820 ./scripts/add-client.sh pixel5
+sudo ./scripts/install-dashboard.sh
+# Open http://<pi-ip>:8080
 ```
 
 ## Platform
