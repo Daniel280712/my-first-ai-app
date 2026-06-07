@@ -87,3 +87,30 @@ def read_gpsd_status(host: str = "127.0.0.1", port: int = 2947, timeout: float =
                         "timestamp": _now(),
                     }
     return {"satellites_visible": None, "satellites_used": None, "hdop": None, "source": "gpsd", "timestamp": _now()}
+
+
+def read_gpsd_raw(max_messages: int = 15, timeout: float = 2.5) -> list[dict]:
+    """Collect recent raw gpsd JSON messages (TPV, SKY, DEVICE, etc.)."""
+    messages: list[dict] = []
+    try:
+        with socket.create_connection(("127.0.0.1", 2947), timeout=timeout) as sock:
+            sock.sendall(b'?WATCH={"enable":true,"json":true}\n')
+            sock.settimeout(timeout)
+            while len(messages) < max_messages:
+                chunk = sock.recv(8192).decode("utf-8", errors="replace")
+                if not chunk:
+                    break
+                for line in chunk.splitlines():
+                    if not line.startswith("{"):
+                        continue
+                    try:
+                        payload = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if payload.get("class") in {"TPV", "SKY", "DEVICE", "VERSION", "WATCH"}:
+                        messages.append(payload)
+                        if len(messages) >= max_messages:
+                            break
+    except OSError:
+        return [{"error": "gpsd not reachable on 127.0.0.1:2947"}]
+    return messages or [{"error": "no gpsd messages yet"}]

@@ -39,6 +39,15 @@
     </div>
   </section>
 
+  <section class="layer-toggles card">
+    <span class="layer-label">Layers</span>
+    <button type="button" class="layer-btn on" data-layer="tiles">Map tiles</button>
+    <button type="button" class="layer-btn on" data-layer="route">Route</button>
+    <button type="button" class="layer-btn on" data-layer="track">Track</button>
+    <button type="button" class="layer-btn on" data-layer="pointer">Pointer</button>
+    <button type="button" class="layer-btn on" data-layer="destination">Dest.</button>
+  </section>
+
   <div id="map"></div>
 
   <section class="metrics">
@@ -68,13 +77,17 @@
     </div>
   </section>
 
-  <section class="learn card">
-    <h2>Real-time navigation</h2>
-    <ul>
-      <li><strong>Maps</strong> — Google Maps tiles (with API key) or OpenStreetMap fallback.</li>
-      <li><strong>Your pointer</strong> — custom icon on top, driven by Pi GPS (rotates with heading).</li>
-      <li><strong>Routing</strong> — online turn-by-turn via OSRM, geocoded with Nominatim.</li>
-    </ul>
+  <section class="raw card">
+    <details open>
+      <summary>Raw GNSS / LTE data</summary>
+      <p class="muted raw-hint">Live feed from Pi gpsd + modem — updates every poll.</p>
+      <h3 class="raw-heading">Navigation (parsed)</h3>
+      <pre id="raw-nav" class="raw-block">—</pre>
+      <h3 class="raw-heading">LTE (parsed)</h3>
+      <pre id="raw-lte" class="raw-block">—</pre>
+      <h3 class="raw-heading">gpsd (raw JSON)</h3>
+      <pre id="raw-gpsd" class="raw-block">—</pre>
+    </details>
   </section>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import time
+from dataclasses import asdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 from typing import Literal
@@ -42,40 +44,61 @@ def manifest() -> FileResponse:
     return FileResponse(STATIC / "manifest.webmanifest", media_type="application/manifest+json")
 
 
-@app.get("/api/live")
-def live_snapshot() -> dict:
+def _build_live_payload() -> dict:
     fix = gps.read_gpsd()
     sky = gps.read_gpsd_status()
     cell = lte.read_lte()
-
     has_fix = fix.lat is not None and fix.lon is not None
-    payload = {
+    return {
         "mode": "live" if has_fix else "no_fix",
-        "gps": fix.__dict__,
+        "gps": asdict(fix),
         "sky": sky,
         "lte": cell,
+        "polled_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+def _maybe_log_fix(payload: dict) -> None:
+    fix = payload["gps"]
+    if payload["mode"] != "live":
+        return
+    global _last_log_at
+    now = time.time()
+    if now - _last_log_at < 10:
+        return
+    _last_log_at = now
+    cell = payload["lte"]
+    storage.append_snapshot(
+        {
+            "lat": fix["lat"],
+            "lon": fix["lon"],
+            "altitude_m": fix.get("altitude_m"),
+            "speed_mps": fix.get("speed_mps"),
+            "track_deg": fix.get("track_deg"),
+            "satellites_used": payload["sky"].get("satellites_used"),
+            "hdop": payload["sky"].get("hdop"),
+            "lte": cell if cell.get("available") else None,
+            "timestamp": fix["timestamp"],
+        }
+    )
+
+
+@app.get("/api/live")
+def live_snapshot() -> dict:
+    payload = _build_live_payload()
     global _latest
     _latest = payload
+    _maybe_log_fix(payload)
+    return payload
 
-    if has_fix:
-        global _last_log_at
-        now = time.time()
-        if now - _last_log_at >= 10:
-            _last_log_at = now
-            storage.append_snapshot(
-                {
-                    "lat": fix.lat,
-                    "lon": fix.lon,
-                    "altitude_m": fix.altitude_m,
-                    "speed_mps": fix.speed_mps,
-                    "track_deg": fix.track_deg,
-                    "satellites_used": sky.get("satellites_used"),
-                    "hdop": sky.get("hdop"),
-                    "lte": cell if cell.get("available") else None,
-                    "timestamp": fix.timestamp,
-                }
-            )
+
+@app.get("/api/raw")
+def raw_snapshot() -> dict:
+    payload = _build_live_payload()
+    payload["gpsd_raw"] = gps.read_gpsd_raw()
+    global _latest
+    _latest = payload
+    _maybe_log_fix(payload)
     return payload
 
 

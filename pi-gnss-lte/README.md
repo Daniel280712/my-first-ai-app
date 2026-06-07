@@ -18,6 +18,8 @@ Learn **GPS navigation** and **LTE cell signal** on a **Raspberry Pi 3**, then *
 - **Search** — address/place lookup (Nominatim)
 - **Routing** — driving / walking / cycling (OSRM)
 - **Live** — Pi GPS updates your pointer; map follows you; reroutes if you go off course
+- **Layer toggles** — strip back map tiles, route, track, pointer, or destination pin
+- **Raw panel** — live parsed GNSS/LTE + raw gpsd JSON for learning and diagnosis
 
 ### Google Maps API key (optional)
 

@@ -107,11 +107,51 @@ button.primary.off {
   color: var(--text);
 }
 
+.layer-toggles {
+  margin: 0.5rem 0.75rem 0;
+  padding: 0.55rem 0.65rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.layer-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-right: 0.25rem;
+}
+
+.layer-btn {
+  border: 1px solid var(--border);
+  background: #0d121a;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.layer-btn.on {
+  background: #1e3a5f;
+  border-color: #3b82f6;
+  color: #dbeafe;
+}
+
 #map {
-  height: 42vh;
-  min-height: 220px;
+  height: 40vh;
+  min-height: 200px;
   width: 100%;
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
+  background: #0b1020;
+}
+
+#map.map-no-tiles {
+  background-color: #0b1020;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
 }
 
 .vehicle-pointer-wrap {
@@ -144,18 +184,41 @@ button.primary.off {
 .label { display: block; color: var(--muted); font-size: 0.72rem; }
 .card strong { font-size: 0.95rem; word-break: break-all; }
 
-.learn {
+.raw {
   margin: 0 0.75rem 1rem;
 }
 
-.learn ul {
-  margin: 0.5rem 0 0;
-  padding-left: 1.1rem;
-  color: var(--muted);
-  font-size: 0.9rem;
+.raw summary {
+  cursor: pointer;
+  font-weight: 600;
 }
 
-.learn li { margin-bottom: 0.35rem; }
+.raw-hint {
+  margin: 0.35rem 0 0.75rem;
+  font-size: 0.8rem;
+}
+
+.raw-heading {
+  margin: 0.65rem 0 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.raw-block {
+  margin: 0;
+  padding: 0.6rem;
+  background: #0d121a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  overflow-x: auto;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
 @media (max-width: 500px) {
   .metrics { grid-template-columns: repeat(2, 1fr); }

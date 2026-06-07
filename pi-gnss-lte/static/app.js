@@ -3,6 +3,15 @@ let marker = null;
 let trackLine;
 let routeLine;
 let destMarker;
+let baseTileLayer = null;
+
+const layerOn = {
+  tiles: true,
+  route: true,
+  track: true,
+  pointer: true,
+  destination: true,
+};
 
 let liveMode = true;
 let pollTimer = null;
@@ -40,11 +49,56 @@ function makePointerIcon(heading = 0) {
 function setPointer(lat, lon, trackDeg = 0) {
   const heading = trackDeg ?? 0;
   if (!marker) {
-    marker = L.marker([lat, lon], { icon: makePointerIcon(heading), zIndexOffset: 1000 }).addTo(map);
+    marker = L.marker([lat, lon], { icon: makePointerIcon(heading), zIndexOffset: 1000 });
+    if (layerOn.pointer) marker.addTo(map);
     return;
   }
   marker.setLatLng([lat, lon]);
   marker.setIcon(makePointerIcon(heading));
+  if (layerOn.pointer && !map.hasLayer(marker)) marker.addTo(map);
+}
+
+function applyLayers() {
+  const mapEl = document.getElementById("map");
+  mapEl.classList.toggle("map-no-tiles", !layerOn.tiles);
+
+  if (baseTileLayer) {
+    if (layerOn.tiles && !map.hasLayer(baseTileLayer)) baseTileLayer.addTo(map);
+    if (!layerOn.tiles && map.hasLayer(baseTileLayer)) map.removeLayer(baseTileLayer);
+  }
+
+  if (routeLine) routeLine.setStyle({ opacity: layerOn.route ? 0.85 : 0 });
+  if (trackLine) trackLine.setStyle({ opacity: layerOn.track ? 0.7 : 0 });
+
+  if (marker) {
+    if (layerOn.pointer && !map.hasLayer(marker)) marker.addTo(map);
+    if (!layerOn.pointer && map.hasLayer(marker)) map.removeLayer(marker);
+  }
+
+  if (destMarker) {
+    destMarker.setOpacity(layerOn.destination && navigating ? 1 : 0);
+  }
+}
+
+function setupLayerToggles() {
+  document.querySelectorAll(".layer-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.layer;
+      layerOn[key] = !layerOn[key];
+      btn.classList.toggle("on", layerOn[key]);
+      applyLayers();
+    });
+  });
+}
+
+function updateRawPanel(data) {
+  document.getElementById("raw-nav").textContent = JSON.stringify(
+    { mode: data.mode, polled_at: data.polled_at, gps: data.gps, sky: data.sky },
+    null,
+    2
+  );
+  document.getElementById("raw-lte").textContent = JSON.stringify(data.lte ?? {}, null, 2);
+  document.getElementById("raw-gpsd").textContent = JSON.stringify(data.gpsd_raw ?? [], null, 2);
 }
 
 async function initMap() {
@@ -59,18 +113,18 @@ async function initMap() {
       await loadScript(
         "https://unpkg.com/leaflet.gridlayer.googlemutant@0.14.0/dist/Leaflet.GoogleMutant.js"
       );
-      L.gridLayer.googleMutant({ type: "roadmap", maxZoom: 21 }).addTo(map);
+      baseTileLayer = L.gridLayer.googleMutant({ type: "roadmap", maxZoom: 21 }).addTo(map);
       statusLine.textContent = "Google Maps · custom GPS pointer";
     } catch (err) {
       console.warn(err);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      baseTileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "&copy; OpenStreetMap",
         maxZoom: 19,
       }).addTo(map);
       statusLine.textContent = "Google Maps failed — using OpenStreetMap";
     }
   } else {
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    baseTileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap",
       maxZoom: 19,
     }).addTo(map);
@@ -81,6 +135,7 @@ async function initMap() {
   routeLine = L.polyline([], { color: "#3b82f6", weight: 6, opacity: 0.85 }).addTo(map);
   destMarker = L.marker([51.5074, -0.1278], { opacity: 0, zIndexOffset: 500 }).addTo(map);
   setPointer(51.5074, -0.1278, 0);
+  setupLayerToggles();
 }
 
 function fmtSpeed(mps) {
@@ -174,7 +229,7 @@ function drawTrack(points, follow = false) {
 function drawRoute(route) {
   routeLine.setLatLngs(route.geometry);
   destMarker.setLatLng([route.end.lat, route.end.lon]);
-  destMarker.setOpacity(1);
+  applyLayers();
   map.fitBounds(routeLine.getBounds(), { padding: [40, 40], maxZoom: 16 });
 }
 
@@ -211,7 +266,8 @@ async function requestRoute(fromLat, fromLon, toLat, toLon, profile, showBanner 
 
 async function pollLive() {
   try {
-    const data = await fetchJson("/api/live");
+    const data = await fetchJson("/api/raw");
+    updateRawPanel(data);
     const track = await fetchJson("/api/track");
     const points = track.points ?? [];
 
@@ -293,7 +349,7 @@ document.getElementById("stop-nav").addEventListener("click", () => {
   activeRoute = null;
   navBanner.classList.add("hidden");
   routeLine.setLatLngs([]);
-  destMarker.setOpacity(0);
+  applyLayers();
   document.getElementById("dest-dist").textContent = "—";
   statusLine.textContent = "Navigation stopped";
 });
